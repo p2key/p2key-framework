@@ -8,19 +8,10 @@
 	<packaging>pom</packaging>
 	<name>p2key framework</name>
 	<modules>
+		<module>p2key-service</module>
+		<module>p2key-register</module>
+		<module>p2key-proxy</module>
 		<module>p2key-server</module>
+		<module>p2key-parent</module>
 	</modules>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 </project>

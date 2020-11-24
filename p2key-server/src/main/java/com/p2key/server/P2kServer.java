@@ -6,27 +6,29 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.Charset;
 import java.util.logging.Level;
 
 import com.p2key.http.map.HttpHeaderMapper;
-import com.p2key.http.model.HttpMethod;
 import com.p2key.http.model.HttpRequestHeader;
 import com.p2key.http.model.HttpResponseHeader;
 import com.p2key.http.processor.HttpHeaderParser;
+import com.p2key.proxy.ServiceProxy;
 import com.p2key.server.log.P2kLogger;
 
 public class P2kServer  implements Runnable {
 	private Socket connect;
-	private static int port = 8089;
 	private static P2kLogger logger = P2kLogger.getP2kLogger("p2kLogger");
+	private static ServiceProxy proxy =null;
 	
 	public P2kServer(Socket c) {
 		connect = c;
+		proxy = new ServiceProxy();
 	}
-	public static void main(String[] args) {
+	public static void start(int port) {
 		try {
 			ServerSocket serverConnect = new ServerSocket(port);
-			logger.log(Level.CONFIG, "Server started.\nListening for connections on port : " + serverConnect.getLocalPort() + " ...\n");
+			logger.log(Level.CONFIG, "Server started.\nListening for connections on port : " + port + " ...\n");
 			while (true) {
 				P2kServer server = new P2kServer(serverConnect.accept());
 				Thread thread = new Thread(server);
@@ -37,7 +39,6 @@ public class P2kServer  implements Runnable {
 		}
 	}
 
-	@Override
 	public void run() {
 		
 		BufferedReader in = null;
@@ -52,8 +53,11 @@ public class P2kServer  implements Runnable {
 			out = new PrintWriter(connect.getOutputStream());
 			dataOut = new BufferedOutputStream(connect.getOutputStream());
 			reqHeader = getHttpHeader(in);
+			String requestBody = getRequestBody(in, reqHeader.getContentLength());
 			if (reqHeader.getMethod() != null) {
-				sendHttpHeader(out, HttpHeaderMapper.get());
+				String result = (String) proxy.callService(reqHeader.getService(), requestBody);
+				sendHttpHeader(out, HttpHeaderMapper.get(result.getBytes(Charset.forName("UTF-8")).length));
+				sendResponseBody(dataOut, result);
 			}
 		} catch (IOException ioe) {
 			System.err.println("Server error : " + ioe);
@@ -88,11 +92,26 @@ public class P2kServer  implements Runnable {
 					HttpHeaderParser.parse(requestHeader, line);
 				}
 			}
-		} catch (NumberFormatException | IOException e) {
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+		} catch(IOException e) {
 			e.printStackTrace();
 		}
 
 		return requestHeader;
+	}
+	
+	private String getRequestBody(BufferedReader in, int contentLength) {
+		char[] body = new char[contentLength];
+		try {
+			in.read(body, 0, contentLength);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		String input = new String(body);
+
+		return input;
 	}
 
 	private void sendHttpHeader(PrintWriter out, HttpResponseHeader responseHeader) {
@@ -102,6 +121,17 @@ public class P2kServer  implements Runnable {
 		out.println(responseHeader.getContentLengthInfo());
 		out.println();
 		out.flush();
+	}
+	
+	private void sendResponseBody(BufferedOutputStream dataOut, String output) {
+		try {
+			dataOut.write(output.getBytes(Charset.forName("UTF-8")), 0,
+					output.getBytes(Charset.forName("UTF-8")).length);
+			dataOut.flush();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }

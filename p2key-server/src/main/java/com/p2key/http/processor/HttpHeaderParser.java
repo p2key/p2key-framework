@@ -25,7 +25,7 @@ public class HttpHeaderParser {
 		String service = st.nextToken();
 		String version = st.nextToken();
 		requestHeader.setMethod(HttpMethod.valueOf(method));
-		requestHeader.setService(service);
+		requestHeader.setService(service.replace("/",""));
 		requestHeader.setHttpVersion(version);
 	}
 	

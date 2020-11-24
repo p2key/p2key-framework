@@ -15,17 +15,21 @@ public class P2kLogger extends Logger {
 	 public static P2kLogger getP2kLogger(String name) {
 		 P2kLogger logger = new P2kLogger(name ,null);
 		 logger.getLogger(name);
+			/*
 		    try { 
 		    	//TODO: create log file per 1 hour again
+		    
 		    	FileHandler fh = new FileHandler("log/p2kserver"+System.nanoTime()+".log");  
 		        logger.addHandler(fh);
 		        SimpleFormatter formatter = new SimpleFormatter();  
 		        fh.setFormatter(formatter); 
+		        
 		    } catch (SecurityException e) {  
 		        e.printStackTrace();  
 		    } catch (IOException e) {  
 		        e.printStackTrace();  
 		    } 
+		    */
 		    return logger;
 	 }
 	
